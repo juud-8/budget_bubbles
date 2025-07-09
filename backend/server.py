@@ -109,7 +109,11 @@ async def create_category(category: BudgetCategory):
 @app.put("/api/categories/{category_id}", response_model=dict)
 async def update_category(category_id: str, category: BudgetCategory):
     try:
-        category_data = category.dict()
+        # Remove id from the update data if present
+        category_data = category.dict(exclude_unset=True)
+        if 'id' in category_data:
+            del category_data['id']
+        
         category_data['updated_at'] = datetime.now()
         
         result = db.categories.update_one(
