@@ -99,8 +99,13 @@ def supabase_patch(table: str, filters: dict, data: dict):
     
     response = requests.patch(url, headers=get_headers(), json=data)
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
+        raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {response.text}")
+    
+    # Supabase might return empty response for successful updates
+    if response.text.strip():
+        return response.json()
+    else:
+        return {"success": True}
 
 def supabase_delete(table: str, filters: dict):
     """Make DELETE request to Supabase table"""
