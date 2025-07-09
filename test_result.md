@@ -285,3 +285,5 @@ agent_communication:
     message: "Starting comprehensive testing of frontend components and user flows."
   - agent: "testing"
     message: "Frontend testing completed. All major components and user flows are working correctly. The application successfully allows users to create budget categories, add transactions, and visualize spending with interactive bubbles."
+  - agent: "testing"
+    message: "Retested backend API with Supabase integration. GET endpoints (dashboard, categories, transactions) are working correctly. POST, PUT, and DELETE operations are failing with 500 errors. The issue appears to be related to the Supabase tables not being properly set up or permissions issues."
