@@ -67,9 +67,9 @@ backend:
 
   - task: "Create transaction (POST /api/transactions)"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -79,6 +79,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Create transaction endpoint is working correctly, successfully creates a transaction with the provided data"
+      - working: false
+        agent: "testing"
+        comment: "Create transaction endpoint is failing with Supabase integration. Returns 500 error with 'Expecting value: line 1 column 1 (char 0)' message."
 
   - task: "Get all transactions (GET /api/transactions)"
     implemented: true
