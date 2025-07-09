@@ -46,13 +46,15 @@ def test_health_check():
     try:
         # Try with the API URL first (without /api prefix)
         base_url = BACKEND_URL.rstrip("/")
-        response = requests.get(f"{base_url}/")
+        
+        # Try the /api endpoint first
+        response = requests.get(f"{base_url}/api")
         
         if response.status_code == 200:
             try:
                 data = response.json()
                 if data.get("status") == "healthy" and data.get("service") == "Budget Bubbles API":
-                    print_success(f"Health check endpoint returned status code {response.status_code}")
+                    print_success(f"Health check endpoint (with /api prefix) returned status code {response.status_code}")
                     print_success(f"Response: {data}")
                     return True
                 else:
@@ -62,13 +64,13 @@ def test_health_check():
                 print_info(f"Response content: {response.text[:100]}")
             return False
         else:
-            # Try with /api prefix as fallback
-            response = requests.get(f"{base_url}/api/")
+            # Try the root endpoint as fallback
+            response = requests.get(f"{base_url}/")
             if response.status_code == 200:
                 try:
                     data = response.json()
                     if data.get("status") == "healthy" and data.get("service") == "Budget Bubbles API":
-                        print_success(f"Health check endpoint (with /api prefix) returned status code {response.status_code}")
+                        print_success(f"Health check endpoint (root) returned status code {response.status_code}")
                         print_success(f"Response: {data}")
                         return True
                     else:
