@@ -5,8 +5,17 @@ import time
 import sys
 
 # Get the backend URL from the frontend .env file
-BACKEND_URL = "http://localhost:8001"
+import os
+from dotenv import load_dotenv
+
+# Load the frontend .env file to get the backend URL
+frontend_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', '.env')
+load_dotenv(frontend_env_path)
+
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')
 API_URL = f"{BACKEND_URL}/api"
+
+print(f"Using backend URL: {BACKEND_URL}")
 
 # Colors for terminal output
 class Colors:
