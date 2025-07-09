@@ -494,7 +494,27 @@ def test_delete_transaction(transaction_id):
         return False
     
     try:
-        response = requests.delete(f"{API_URL}/transactions/{transaction_id}")
+        # Print request details for debugging
+        print_info(f"Sending DELETE request to: {API_URL}/transactions/{transaction_id}")
+        
+        # Add headers explicitly
+        headers = {"Content-Type": "application/json"}
+        print_info(f"Request headers: {headers}")
+        
+        response = requests.delete(
+            f"{API_URL}/transactions/{transaction_id}",
+            headers=headers
+        )
+        
+        # Print response details for debugging
+        print_info(f"Response status code: {response.status_code}")
+        print_info(f"Response headers: {response.headers}")
+        
+        try:
+            response_data = response.json()
+            print_info(f"Response JSON: {response_data}")
+        except:
+            print_info(f"Response text (not JSON): {response.text[:200]}")
         
         if response.status_code == 200:
             data = response.json()
