@@ -1,9 +1,9 @@
 backend:
   - task: "Health check endpoint (GET /)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -16,6 +16,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Health check endpoint is not working with Supabase integration. Returns HTML instead of JSON."
+      - working: true
+        agent: "testing"
+        comment: "Fixed health check endpoint by adding a separate /api endpoint. Now returns proper JSON response."
 
   - task: "Dashboard endpoint (GET /api/dashboard)"
     implemented: true
@@ -34,9 +37,9 @@ backend:
 
   - task: "Create budget category (POST /api/categories)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -49,6 +52,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Create category endpoint is failing with Supabase integration. Returns 500 error with 'Expecting value: line 1 column 1 (char 0)' message."
+      - working: true
+        agent: "testing"
+        comment: "Create category endpoint is now working correctly with Supabase integration."
 
   - task: "Get all categories (GET /api/categories)"
     implemented: true
@@ -67,9 +73,9 @@ backend:
 
   - task: "Create transaction (POST /api/transactions)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -82,6 +88,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Create transaction endpoint is failing with Supabase integration. Returns 500 error with 'Expecting value: line 1 column 1 (char 0)' message."
+      - working: true
+        agent: "testing"
+        comment: "Create transaction endpoint is now working correctly with Supabase integration."
 
   - task: "Get all transactions (GET /api/transactions)"
     implemented: true
@@ -100,9 +109,9 @@ backend:
 
   - task: "Update category (PUT /api/categories/{id})"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -118,12 +127,15 @@ backend:
       - working: false
         agent: "testing"
         comment: "Update category endpoint is failing with Supabase integration. Returns 500 error with empty detail message."
+      - working: true
+        agent: "testing"
+        comment: "Fixed update category endpoint by adding Prefer header and better error handling. Now working correctly with Supabase integration."
 
   - task: "Update transaction (PUT /api/transactions/{id})"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -136,12 +148,15 @@ backend:
       - working: false
         agent: "testing"
         comment: "Update transaction endpoint is failing with Supabase integration. Returns 500 error with empty detail message."
+      - working: true
+        agent: "testing"
+        comment: "Fixed update transaction endpoint by adding Prefer header and better error handling. Now working correctly with Supabase integration."
 
   - task: "Delete transaction (DELETE /api/transactions/{id})"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -154,12 +169,15 @@ backend:
       - working: false
         agent: "testing"
         comment: "Delete transaction endpoint is failing with Supabase integration. Returns 500 error with empty detail message."
+      - working: true
+        agent: "testing"
+        comment: "Fixed delete transaction endpoint by adding Prefer header and better error handling. Now working correctly with Supabase integration."
 
   - task: "Delete category (DELETE /api/categories/{id})"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -172,6 +190,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Delete category endpoint is failing with Supabase integration. Returns 500 error with empty detail message."
+      - working: true
+        agent: "testing"
+        comment: "Fixed delete category endpoint by adding Prefer header and better error handling. Now working correctly with Supabase integration."
 
 frontend:
   - task: "Frontend implementation"
