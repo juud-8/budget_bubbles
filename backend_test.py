@@ -365,10 +365,29 @@ def test_update_category(category_id):
     }
     
     try:
+        # Print request details for debugging
+        print_info(f"Sending PUT request to: {API_URL}/categories/{category_id}")
+        print_info(f"Request payload: {updated_category_data}")
+        
+        # Add headers explicitly
+        headers = {"Content-Type": "application/json"}
+        print_info(f"Request headers: {headers}")
+        
         response = requests.put(
             f"{API_URL}/categories/{category_id}", 
-            json=updated_category_data
+            json=updated_category_data,
+            headers=headers
         )
+        
+        # Print response details for debugging
+        print_info(f"Response status code: {response.status_code}")
+        print_info(f"Response headers: {response.headers}")
+        
+        try:
+            response_data = response.json()
+            print_info(f"Response JSON: {response_data}")
+        except:
+            print_info(f"Response text (not JSON): {response.text[:200]}")
         
         if response.status_code == 200:
             data = response.json()
