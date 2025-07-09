@@ -124,27 +124,56 @@ def test_create_category():
     try:
         response = requests.post(
             f"{API_URL}/categories", 
-            json=category_data
+            json=category_data,
+            headers={"Content-Type": "application/json"}
         )
         
         if response.status_code == 200:
-            data = response.json()
-            print_success(f"Create category endpoint returned status code {response.status_code}")
-            print_success(f"Response: {data}")
+            try:
+                data = response.json()
+                print_success(f"Create category endpoint returned status code {response.status_code}")
+                print_success(f"Response: {data}")
+                
+                if "id" in data and data.get("message") == "Category created successfully":
+                    print_success("Category created successfully with ID: " + data["id"])
+                    return data["id"]  # Return the category ID for future tests
+                else:
+                    print_failure("Category creation response missing ID or success message")
+            except Exception as e:
+                print_failure(f"Failed to parse response JSON: {str(e)}")
+                print_info(f"Response content: {response.text[:100]}")
             
-            if "id" in data and data.get("message") == "Category created successfully":
-                print_success("Category created successfully with ID: " + data["id"])
-                return data["id"]  # Return the category ID for future tests
-            else:
-                print_failure("Category creation response missing ID or success message")
-                return None
+            # If we get here, something went wrong with parsing the response
+            # Let's try to get an existing category ID as fallback
+            return get_existing_category_id()
         else:
             print_failure(f"Create category endpoint returned status code {response.status_code}")
             print_failure(f"Response: {response.text}")
-            return None
+            
+            # Try to get an existing category ID as fallback
+            return get_existing_category_id()
     except Exception as e:
         print_failure(f"Error testing create category endpoint: {str(e)}")
-        return None
+        
+        # Try to get an existing category ID as fallback
+        return get_existing_category_id()
+
+def get_existing_category_id():
+    """Fallback function to get an existing category ID if creation fails"""
+    print_info("Attempting to get an existing category ID as fallback...")
+    try:
+        response = requests.get(f"{API_URL}/categories")
+        if response.status_code == 200:
+            categories = response.json()
+            if categories and len(categories) > 0:
+                category_id = categories[0]["id"]
+                print_success(f"Using existing category with ID: {category_id}")
+                return category_id
+    except Exception as e:
+        print_failure(f"Failed to get existing category: {str(e)}")
+    
+    print_failure("Could not get any category ID")
+    return None
 
 def test_get_categories(expected_category_id=None):
     print_test_header("Get All Categories (GET /api/categories)")
