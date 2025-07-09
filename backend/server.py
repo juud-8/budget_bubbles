@@ -279,6 +279,8 @@ async def delete_transaction(transaction_id: str):
         
         return {"message": "Transaction deleted successfully"}
     except Exception as e:
+        if "Transaction not found" in str(e):
+            raise e
         raise HTTPException(status_code=500, detail=str(e))
 
 # Dashboard summary endpoint
