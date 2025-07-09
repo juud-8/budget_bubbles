@@ -115,8 +115,13 @@ def supabase_delete(table: str, filters: dict):
     
     response = requests.delete(url, headers=get_headers())
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
+        raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {response.text}")
+    
+    # Supabase might return empty response for successful deletes
+    if response.text.strip():
+        return response.json()
+    else:
+        return {"success": True}
 
 # Health check endpoint
 @app.get("/")
