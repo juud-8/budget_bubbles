@@ -127,15 +127,28 @@ def supabase_delete(table: str, filters: dict):
     filter_params = "&".join([f"{k}=eq.{v}" for k, v in filters.items()])
     url += f"?{filter_params}"
     
-    response = requests.delete(url, headers=get_headers())
+    # Add Prefer header for returning data
+    headers = get_headers()
+    headers["Prefer"] = "return=representation"
+    
+    print(f"DELETE request to URL: {url}")
+    print(f"DELETE request headers: {headers}")
+    
+    response = requests.delete(url, headers=headers)
+    print(f"DELETE response status: {response.status_code}")
+    print(f"DELETE response text: {response.text}")
+    
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {response.text}")
     
     # Supabase might return empty response for successful deletes
     if response.text.strip():
-        return response.json()
+        try:
+            return response.json()
+        except:
+            return {"success": True, "message": "Delete successful"}
     else:
-        return {"success": True}
+        return {"success": True, "message": "Delete successful"}
 
 # Health check endpoint
 @app.get("/")
