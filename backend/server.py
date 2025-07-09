@@ -266,9 +266,6 @@ async def update_transaction(transaction_id: str, transaction: Transaction):
         
         result = supabase_patch('transactions', {'id': transaction_id}, transaction_data)
         
-        if not result:
-            raise HTTPException(status_code=404, detail="Transaction not found")
-        
         return {"message": "Transaction updated successfully"}
     except Exception as e:
         if "Transaction not found" in str(e):
