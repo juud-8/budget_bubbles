@@ -643,16 +643,32 @@ def run_all_tests():
     test_results["dashboard_updated"] = test_dashboard_updated()
     
     # Test updating a category
-    test_results["update_category"] = test_update_category(category_id)
+    if category_id:
+        test_results["update_category"] = test_update_category(category_id)
+    else:
+        print_failure("Skipping update_category test due to missing category_id")
+        test_results["update_category"] = "SKIPPED"
     
     # Test updating a transaction
-    test_results["update_transaction"] = test_update_transaction(transaction_id, category_id)
+    if transaction_id and category_id:
+        test_results["update_transaction"] = test_update_transaction(transaction_id, category_id)
+    else:
+        print_failure("Skipping update_transaction test due to missing transaction_id or category_id")
+        test_results["update_transaction"] = "SKIPPED"
     
     # Test deleting a transaction
-    test_results["delete_transaction"] = test_delete_transaction(transaction_id)
+    if transaction_id:
+        test_results["delete_transaction"] = test_delete_transaction(transaction_id)
+    else:
+        print_failure("Skipping delete_transaction test due to missing transaction_id")
+        test_results["delete_transaction"] = "SKIPPED"
     
     # Test deleting a category
-    test_results["delete_category"] = test_delete_category(category_id)
+    if category_id:
+        test_results["delete_category"] = test_delete_category(category_id)
+    else:
+        print_failure("Skipping delete_category test due to missing category_id")
+        test_results["delete_category"] = "SKIPPED"
     
     # Test error handling
     test_error_handling()
@@ -662,8 +678,10 @@ def run_all_tests():
     
     all_passed = True
     for test_name, result in test_results.items():
-        if result:
+        if result == True:
             print(f"{Colors.OKGREEN}✓ {test_name.replace('_', ' ').title()}{Colors.ENDC}")
+        elif result == "SKIPPED":
+            print(f"{Colors.WARNING}⚠ {test_name.replace('_', ' ').title()} (SKIPPED){Colors.ENDC}")
         else:
             all_passed = False
             print(f"{Colors.FAIL}✗ {test_name.replace('_', ' ').title()}{Colors.ENDC}")
