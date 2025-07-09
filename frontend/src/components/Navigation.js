@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, CreditCard, List, Bubble } from 'lucide-react';
+import { Home, Plus, CreditCard, List, Circle } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
