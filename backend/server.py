@@ -83,8 +83,13 @@ def supabase_post(table: str, data: dict):
     url = f"{SUPABASE_URL}/rest/v1/{table}"
     response = requests.post(url, headers=get_headers(), json=data)
     if response.status_code not in [200, 201]:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
+        raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {response.text}")
+    
+    # Supabase might return empty response for successful inserts
+    if response.text.strip():
+        return response.json()
+    else:
+        return {"success": True}
 
 def supabase_patch(table: str, filters: dict, data: dict):
     """Make PATCH request to Supabase table"""
