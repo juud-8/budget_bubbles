@@ -287,13 +287,21 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Initial Dashboard Load"
-    - "Category Creation Flow"
-    - "Budget Bubble Visualization"
-    - "Transaction Creation Flow"
-    - "Real-time Updates"
-    - "Navigation and Forms"
-  stuck_tasks: []
+    - "Health check endpoint (GET /)"
+    - "Create budget category (POST /api/categories)"
+    - "Create transaction (POST /api/transactions)"
+    - "Update category (PUT /api/categories/{id})"
+    - "Update transaction (PUT /api/transactions/{id})"
+    - "Delete transaction (DELETE /api/transactions/{id})"
+    - "Delete category (DELETE /api/categories/{id})"
+  stuck_tasks:
+    - "Health check endpoint (GET /)"
+    - "Create budget category (POST /api/categories)"
+    - "Create transaction (POST /api/transactions)"
+    - "Update category (PUT /api/categories/{id})"
+    - "Update transaction (PUT /api/transactions/{id})"
+    - "Delete transaction (DELETE /api/transactions/{id})"
+    - "Delete category (DELETE /api/categories/{id})"
   test_all: true
   test_priority: "sequential"
 
