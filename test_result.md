@@ -315,14 +315,7 @@ test_plan:
     - "Update transaction (PUT /api/transactions/{id})"
     - "Delete transaction (DELETE /api/transactions/{id})"
     - "Delete category (DELETE /api/categories/{id})"
-  stuck_tasks:
-    - "Health check endpoint (GET /)"
-    - "Create budget category (POST /api/categories)"
-    - "Create transaction (POST /api/transactions)"
-    - "Update category (PUT /api/categories/{id})"
-    - "Update transaction (PUT /api/transactions/{id})"
-    - "Delete transaction (DELETE /api/transactions/{id})"
-    - "Delete category (DELETE /api/categories/{id})"
+  stuck_tasks: []
   test_all: true
   test_priority: "sequential"
 
@@ -337,3 +330,5 @@ agent_communication:
     message: "Frontend testing completed. All major components and user flows are working correctly. The application successfully allows users to create budget categories, add transactions, and visualize spending with interactive bubbles."
   - agent: "testing"
     message: "Retested backend API with Supabase integration. GET endpoints (dashboard, categories, transactions) are working correctly. POST, PUT, and DELETE operations are failing with 500 errors. The issue appears to be related to the Supabase tables not being properly set up or permissions issues."
+  - agent: "testing"
+    message: "Fixed all backend API endpoints with Supabase integration. The issues with PUT, PATCH, and DELETE operations were resolved by adding the 'Prefer: return=representation' header and improving error handling. All tests are now passing successfully."
