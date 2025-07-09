@@ -1,9 +1,9 @@
 backend:
   - task: "Health check endpoint (GET /)"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -13,6 +13,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Health check endpoint is working correctly, returns status 200 with proper response"
+      - working: false
+        agent: "testing"
+        comment: "Health check endpoint is not working with Supabase integration. Returns HTML instead of JSON."
 
   - task: "Dashboard endpoint (GET /api/dashboard)"
     implemented: true
