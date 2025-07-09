@@ -44,19 +44,42 @@ def test_health_check():
     print_test_header("Health Check Endpoint (GET /)")
     
     try:
-        response = requests.get(f"{BACKEND_URL}/")
+        # Try with the API URL first (without /api prefix)
+        base_url = BACKEND_URL.rstrip("/")
+        response = requests.get(f"{base_url}/")
+        
         if response.status_code == 200:
-            data = response.json()
-            if data.get("status") == "healthy" and data.get("service") == "Budget Bubbles API":
-                print_success(f"Health check endpoint returned status code {response.status_code}")
-                print_success(f"Response: {data}")
-                return True
-            else:
-                print_failure(f"Health check endpoint returned unexpected data: {data}")
-                return False
-        else:
-            print_failure(f"Health check endpoint returned status code {response.status_code}")
+            try:
+                data = response.json()
+                if data.get("status") == "healthy" and data.get("service") == "Budget Bubbles API":
+                    print_success(f"Health check endpoint returned status code {response.status_code}")
+                    print_success(f"Response: {data}")
+                    return True
+                else:
+                    print_failure(f"Health check endpoint returned unexpected data: {data}")
+            except:
+                print_failure("Health check endpoint returned non-JSON response")
+                print_info(f"Response content: {response.text[:100]}")
             return False
+        else:
+            # Try with /api prefix as fallback
+            response = requests.get(f"{base_url}/api/")
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    if data.get("status") == "healthy" and data.get("service") == "Budget Bubbles API":
+                        print_success(f"Health check endpoint (with /api prefix) returned status code {response.status_code}")
+                        print_success(f"Response: {data}")
+                        return True
+                    else:
+                        print_failure(f"Health check endpoint returned unexpected data: {data}")
+                except:
+                    print_failure("Health check endpoint returned non-JSON response")
+                    print_info(f"Response content: {response.text[:100]}")
+                return False
+            else:
+                print_failure(f"Health check endpoint returned status code {response.status_code}")
+                return False
     except Exception as e:
         print_failure(f"Error testing health check endpoint: {str(e)}")
         return False
