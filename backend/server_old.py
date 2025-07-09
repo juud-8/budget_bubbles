@@ -7,7 +7,7 @@ import json
 from typing import List, Optional
 from pydantic import BaseModel
 import uuid
-import requests
+from supabase import create_client, Client
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,20 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Supabase configuration
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+# Supabase connection
+def get_supabase() -> Client:
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_KEY")
+    if not url or not key:
+        raise HTTPException(status_code=500, detail="Supabase credentials not configured")
+    return create_client(url, key)
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise Exception("Supabase credentials not configured")
-
-# Headers for Supabase requests
-def get_headers():
-    return {
-        'apikey': SUPABASE_KEY,
-        'Authorization': f'Bearer {SUPABASE_KEY}',
-        'Content-Type': 'application/json'
-    }
+# Initialize Supabase client
+supabase = get_supabase()
 
 # Pydantic models
 class BudgetCategory(BaseModel):
@@ -66,47 +62,17 @@ class CategoryWithSpending(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-# Helper functions for Supabase HTTP requests
-def supabase_get(table: str, params: dict = None):
-    """Make GET request to Supabase table"""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
-    if params:
-        url += "?" + "&".join([f"{k}={v}" for k, v in params.items()])
-    
-    response = requests.get(url, headers=get_headers())
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
-
-def supabase_post(table: str, data: dict):
-    """Make POST request to Supabase table"""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
-    response = requests.post(url, headers=get_headers(), json=data)
-    if response.status_code not in [200, 201]:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
-
-def supabase_patch(table: str, filters: dict, data: dict):
-    """Make PATCH request to Supabase table"""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
-    filter_params = "&".join([f"{k}=eq.{v}" for k, v in filters.items()])
-    url += f"?{filter_params}"
-    
-    response = requests.patch(url, headers=get_headers(), json=data)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
-
-def supabase_delete(table: str, filters: dict):
-    """Make DELETE request to Supabase table"""
-    url = f"{SUPABASE_URL}/rest/v1/{table}"
-    filter_params = "&".join([f"{k}=eq.{v}" for k, v in filters.items()])
-    url += f"?{filter_params}"
-    
-    response = requests.delete(url, headers=get_headers())
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
+# Helper function to create tables if they don't exist
+async def ensure_tables_exist():
+    """Ensure the required tables exist in Supabase"""
+    try:
+        # Test if tables exist by querying them
+        supabase.table('budget_categories').select('*').limit(1).execute()
+        supabase.table('transactions').select('*').limit(1).execute()
+        print("✅ Tables already exist")
+    except Exception as e:
+        print(f"⚠️  Tables might not exist: {str(e)}")
+        print("Please create the tables manually in Supabase SQL Editor using the create_schema.sql file")
 
 # Health check endpoint
 @app.get("/")
@@ -118,17 +84,15 @@ async def health_check():
 async def get_categories():
     try:
         # Get categories
-        categories = supabase_get('budget_categories', {'select': '*', 'order': 'created_at.asc'})
+        categories_response = supabase.table('budget_categories').select('*').execute()
+        categories = categories_response.data
         
         result = []
         for category in categories:
             # Calculate total spent for this category
-            transactions = supabase_get('transactions', {
-                'select': 'amount',
-                'category_id': f'eq.{category["id"]}'
-            })
+            transactions_response = supabase.table('transactions').select('amount').eq('category_id', category['id']).execute()
             
-            total_spent = sum(transaction['amount'] for transaction in transactions)
+            total_spent = sum(transaction['amount'] for transaction in transactions_response.data)
             budget_amount = category['budget_amount']
             remaining_budget = budget_amount - total_spent
             percentage_used = (total_spent / budget_amount * 100) if budget_amount > 0 else 0
@@ -161,7 +125,7 @@ async def create_category(category: BudgetCategory):
             "updated_at": datetime.now().isoformat()
         }
         
-        result = supabase_post('budget_categories', category_data)
+        result = supabase.table('budget_categories').insert(category_data).execute()
         return {"id": category_data['id'], "message": "Category created successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -176,9 +140,9 @@ async def update_category(category_id: str, category: BudgetCategory):
             "updated_at": datetime.now().isoformat()
         }
         
-        result = supabase_patch('budget_categories', {'id': category_id}, category_data)
+        result = supabase.table('budget_categories').update(category_data).eq('id', category_id).execute()
         
-        if not result:
+        if not result.data:
             raise HTTPException(status_code=404, detail="Category not found")
         
         return {"message": "Category updated successfully"}
@@ -191,24 +155,31 @@ async def update_category(category_id: str, category: BudgetCategory):
 async def delete_category(category_id: str):
     try:
         # Delete all transactions for this category first
-        supabase_delete('transactions', {'category_id': category_id})
+        supabase.table('transactions').delete().eq('category_id', category_id).execute()
         
         # Delete the category
-        result = supabase_delete('budget_categories', {'id': category_id})
+        result = supabase.table('budget_categories').delete().eq('id', category_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Category not found")
         
         return {"message": "Category deleted successfully"}
     except Exception as e:
+        if "Category not found" in str(e):
+            raise e
         raise HTTPException(status_code=500, detail=str(e))
 
 # Transactions endpoints
 @app.get("/api/transactions", response_model=List[Transaction])
 async def get_transactions(category_id: Optional[str] = None):
     try:
-        params = {'select': '*', 'order': 'date.desc'}
-        if category_id:
-            params['category_id'] = f'eq.{category_id}'
+        query = supabase.table('transactions').select('*').order('date', desc=True)
         
-        transactions = supabase_get('transactions', params)
+        if category_id:
+            query = query.eq('category_id', category_id)
+        
+        transactions_response = query.execute()
+        transactions = transactions_response.data
         
         result = []
         for transaction in transactions:
@@ -237,7 +208,7 @@ async def create_transaction(transaction: Transaction):
             "created_at": datetime.now().isoformat()
         }
         
-        result = supabase_post('transactions', transaction_data)
+        result = supabase.table('transactions').insert(transaction_data).execute()
         return {"id": transaction_data['id'], "message": "Transaction created successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -252,9 +223,9 @@ async def update_transaction(transaction_id: str, transaction: Transaction):
             "date": transaction.date.isoformat()
         }
         
-        result = supabase_patch('transactions', {'id': transaction_id}, transaction_data)
+        result = supabase.table('transactions').update(transaction_data).eq('id', transaction_id).execute()
         
-        if not result:
+        if not result.data:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         return {"message": "Transaction updated successfully"}
@@ -266,10 +237,15 @@ async def update_transaction(transaction_id: str, transaction: Transaction):
 @app.delete("/api/transactions/{transaction_id}")
 async def delete_transaction(transaction_id: str):
     try:
-        result = supabase_delete('transactions', {'id': transaction_id})
+        result = supabase.table('transactions').delete().eq('id', transaction_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Transaction not found")
         
         return {"message": "Transaction deleted successfully"}
     except Exception as e:
+        if "Transaction not found" in str(e):
+            raise e
         raise HTTPException(status_code=500, detail=str(e))
 
 # Dashboard summary endpoint
@@ -277,12 +253,14 @@ async def delete_transaction(transaction_id: str):
 async def get_dashboard():
     try:
         # Get all categories
-        categories = supabase_get('budget_categories', {'select': '*'})
+        categories_response = supabase.table('budget_categories').select('*').execute()
+        categories = categories_response.data
         
         total_budget = sum(cat['budget_amount'] for cat in categories)
         
         # Get all transactions
-        transactions = supabase_get('transactions', {'select': '*'})
+        transactions_response = supabase.table('transactions').select('*').execute()
+        transactions = transactions_response.data
         
         total_spent = sum(transaction['amount'] for transaction in transactions)
         remaining_budget = total_budget - total_spent
@@ -302,16 +280,7 @@ async def get_dashboard():
 
 @app.on_event("startup")
 async def startup_event():
-    print("🚀 Budget Bubbles API starting up...")
-    print(f"📊 Connected to Supabase at: {SUPABASE_URL}")
-    # Test connection
-    try:
-        # Try to access the categories table
-        supabase_get('budget_categories', {'select': '*', 'limit': '1'})
-        print("✅ Successfully connected to budget_categories table")
-    except Exception as e:
-        print(f"⚠️  Could not access budget_categories table: {str(e)}")
-        print("💡 Please create the tables manually in Supabase SQL Editor")
+    await ensure_tables_exist()
 
 if __name__ == "__main__":
     import uvicorn
