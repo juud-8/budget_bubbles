@@ -15,7 +15,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Bubble className="w-5 h-5 text-white" />
+              <Circle className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-800">Budget Bubbles</span>
           </Link>
