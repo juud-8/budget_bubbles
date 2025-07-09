@@ -139,9 +139,9 @@ backend:
 
   - task: "Delete transaction (DELETE /api/transactions/{id})"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -151,6 +151,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Delete transaction endpoint is working correctly, successfully deletes a transaction"
+      - working: false
+        agent: "testing"
+        comment: "Delete transaction endpoint is failing with Supabase integration. Returns 500 error with empty detail message."
 
   - task: "Delete category (DELETE /api/categories/{id})"
     implemented: true
