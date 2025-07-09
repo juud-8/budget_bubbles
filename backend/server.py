@@ -193,9 +193,6 @@ async def update_category(category_id: str, category: BudgetCategory):
         
         result = supabase_patch('budget_categories', {'id': category_id}, category_data)
         
-        if not result:
-            raise HTTPException(status_code=404, detail="Category not found")
-        
         return {"message": "Category updated successfully"}
     except Exception as e:
         if "Category not found" in str(e):
