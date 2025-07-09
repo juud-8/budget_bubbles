@@ -97,15 +97,29 @@ def supabase_patch(table: str, filters: dict, data: dict):
     filter_params = "&".join([f"{k}=eq.{v}" for k, v in filters.items()])
     url += f"?{filter_params}"
     
-    response = requests.patch(url, headers=get_headers(), json=data)
+    # Add Prefer header for returning data
+    headers = get_headers()
+    headers["Prefer"] = "return=representation"
+    
+    print(f"PATCH request to URL: {url}")
+    print(f"PATCH request headers: {headers}")
+    print(f"PATCH request data: {data}")
+    
+    response = requests.patch(url, headers=headers, json=data)
+    print(f"PATCH response status: {response.status_code}")
+    print(f"PATCH response text: {response.text}")
+    
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=f"Supabase error: {response.text}")
     
     # Supabase might return empty response for successful updates
     if response.text.strip():
-        return response.json()
+        try:
+            return response.json()
+        except:
+            return {"success": True, "message": "Update successful"}
     else:
-        return {"success": True}
+        return {"success": True, "message": "Update successful"}
 
 def supabase_delete(table: str, filters: dict):
     """Make DELETE request to Supabase table"""
