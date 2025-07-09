@@ -155,6 +155,11 @@ def supabase_delete(table: str, filters: dict):
 async def health_check():
     return {"status": "healthy", "service": "Budget Bubbles API"}
 
+# API health check endpoint
+@app.get("/api")
+async def api_health_check():
+    return {"status": "healthy", "service": "Budget Bubbles API"}
+
 # Budget Categories endpoints
 @app.get("/api/categories", response_model=List[CategoryWithSpending])
 async def get_categories():
