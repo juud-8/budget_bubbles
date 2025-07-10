@@ -19,18 +19,17 @@ const BubbleCanvas = ({ categories }) => {
     return Math.max(minSize, Math.min(maxSize, size));
   };
 
-  // Get bubble color based on spending percentage
-  const getBubbleColor = (category) => {
-    const percentage = category.percentage_used;
-    if (percentage > 100) {
-      return 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)'; // Red for overspent
-    } else if (percentage > 80) {
-      return 'linear-gradient(135deg, #feca57 0%, #ff9ff3 100%)'; // Yellow/orange for warning
-    } else if (percentage > 50) {
-      return 'linear-gradient(135deg, #48cae4 0%, #0077b6 100%)'; // Blue for moderate
+  // Get bubble color based on category color and spending
+  const getBubbleStyle = (category) => {
+    const style = {
+      background: category.color,
+    };
+    if (category.percentage_used > 100) {
+      style.border = '3px solid #ff4d4f'; // Red border for overspent
     } else {
-      return 'linear-gradient(135deg, #06ffa5 0%, #1cb5e0 100%)'; // Green for good
+      style.border = 'none';
     }
+    return style;
   };
 
   // Initialize bubble positions
@@ -93,7 +92,6 @@ const BubbleCanvas = ({ categories }) => {
         {categories.map((category) => {
           const size = calculateBubbleSize(category.budget_amount);
           const position = bubblePositions[category.id] || { x: 0, y: 0 };
-          
           return (
             <Draggable
               key={category.id}
@@ -106,7 +104,7 @@ const BubbleCanvas = ({ categories }) => {
                 style={{
                   width: `${size}px`,
                   height: `${size}px`,
-                  background: getBubbleColor(category),
+                  ...getBubbleStyle(category),
                 }}
                 onClick={() => handleBubbleClick(category)}
               >

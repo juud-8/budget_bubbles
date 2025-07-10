@@ -1,13 +1,28 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, CreditCard, List, Circle } from 'lucide-react';
+import { Home, Plus, CreditCard, List, Circle, FolderOpen, BarChart2, DollarSign, User, Settings as SettingsIcon } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const analyticsRef = useRef(null);
 
   const isActive = (path) => {
     return location.pathname === path;
   };
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (analyticsRef.current && !analyticsRef.current.contains(event.target)) {
+        setAnalyticsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50">
@@ -20,7 +35,7 @@ const Navigation = () => {
             <span className="text-xl font-bold text-gray-800">Budget Bubbles</span>
           </Link>
 
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 items-center">
             <Link
               to="/"
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
@@ -31,6 +46,18 @@ const Navigation = () => {
             >
               <Home className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+
+            <Link
+              to="/categories"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/categories') 
+                  ? 'bg-blue-100 text-blue-600' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Categories</span>
             </Link>
 
             <Link
@@ -46,6 +73,18 @@ const Navigation = () => {
             </Link>
 
             <Link
+              to="/transactions"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/transactions') 
+                  ? 'bg-blue-100 text-blue-600' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Transactions</span>
+            </Link>
+
+            <Link
               to="/transactions/new"
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                 isActive('/transactions/new') 
@@ -57,17 +96,92 @@ const Navigation = () => {
               <span className="hidden sm:inline">Add Transaction</span>
             </Link>
 
+            {/* Expenses Button */}
             <Link
-              to="/transactions"
+              to="/expenses"
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                isActive('/transactions') 
-                  ? 'bg-blue-100 text-blue-600' 
+                isActive('/expenses')
+                  ? 'bg-blue-100 text-blue-600'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <List className="w-4 h-4" />
-              <span className="hidden sm:inline">Transactions</span>
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline">Expenses</span>
             </Link>
+
+            {/* Cash Flow Button */}
+            <Link
+              to="/cashflow"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/cashflow')
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Cash Flow</span>
+            </Link>
+
+            {/* Analytics Dropdown */}
+            <div className="relative" ref={analyticsRef}>
+              <button
+                onClick={() => setAnalyticsOpen((open) => !open)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  location.pathname.startsWith('/analytics')
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Analytics</span>
+                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {analyticsOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <Link
+                    to="/analytics/basic"
+                    className={`block px-4 py-2 text-gray-700 hover:bg-blue-50 ${isActive('/analytics/basic') ? 'font-bold text-blue-600' : ''}`}
+                    onClick={() => setAnalyticsOpen(false)}
+                  >
+                    Basic Analytics
+                  </Link>
+                  <Link
+                    to="/analytics/advanced"
+                    className={`block px-4 py-2 text-gray-700 hover:bg-blue-50 ${isActive('/analytics/advanced') ? 'font-bold text-blue-600' : ''}`}
+                    onClick={() => setAnalyticsOpen(false)}
+                  >
+                    Advanced Analytics
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Button */}
+            <Link
+              to="/profile"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/profile')
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </Link>
+
+            {/* Settings Button */}
+            <Link
+              to="/settings"
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/settings')
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <SettingsIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from datetime import datetime
@@ -342,6 +342,124 @@ async def get_dashboard():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Replace in-memory profile/settings with Supabase integration
+TEST_USER_ID = '00000000-0000-0000-0000-000000000001'  # Replace with real user_id from auth in production
+
+@app.get('/api/profile')
+def get_profile():
+    url = f"{SUPABASE_URL}/rest/v1/user_profiles?user_id=eq.{TEST_USER_ID}&select=*"
+    resp = requests.get(url, headers=get_headers())
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    data = resp.json()
+    if data:
+        return {
+            'name': data[0].get('name', ''),
+            'email': data[0].get('email', ''),
+        }
+    else:
+        return {'name': '', 'email': ''}
+
+@app.put('/api/profile')
+def update_profile(data: dict = Body(...)):
+    # Check if profile exists
+    url = f"{SUPABASE_URL}/rest/v1/user_profiles?user_id=eq.{TEST_USER_ID}"
+    resp = requests.get(url, headers=get_headers())
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    existing = resp.json()
+    if existing:
+        # Update
+        patch_url = f"{SUPABASE_URL}/rest/v1/user_profiles?user_id=eq.{TEST_USER_ID}"
+        patch_headers = get_headers(); patch_headers['Prefer'] = 'return=representation'
+        patch_resp = requests.patch(patch_url, headers=patch_headers, json={
+            'name': data.get('name', ''),
+            'email': data.get('email', ''),
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        if patch_resp.status_code not in [200, 204]:
+            raise HTTPException(status_code=patch_resp.status_code, detail=patch_resp.text)
+    else:
+        # Insert
+        post_url = f"{SUPABASE_URL}/rest/v1/user_profiles"
+        post_headers = get_headers(); post_headers['Prefer'] = 'return=representation'
+        post_resp = requests.post(post_url, headers=post_headers, json={
+            'user_id': TEST_USER_ID,
+            'name': data.get('name', ''),
+            'email': data.get('email', ''),
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        if post_resp.status_code not in [200, 201]:
+            raise HTTPException(status_code=post_resp.status_code, detail=post_resp.text)
+    # Return latest
+    return get_profile()
+
+@app.get('/api/settings')
+def get_settings():
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?user_id=eq.{TEST_USER_ID}&select=*"
+    resp = requests.get(url, headers=get_headers())
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    data = resp.json()
+    if data:
+        return {
+            'dark_mode': data[0].get('dark_mode', False),
+            'notifications': data[0].get('notifications', True),
+            'currency': data[0].get('currency', 'USD'),
+            'language': data[0].get('language', 'en'),
+            'timezone': data[0].get('timezone', 'America/New_York'),
+        }
+    else:
+        return {
+            'dark_mode': False,
+            'notifications': True,
+            'currency': 'USD',
+            'language': 'en',
+            'timezone': 'America/New_York',
+        }
+
+@app.put('/api/settings')
+def update_settings(data: dict = Body(...)):
+    # Check if settings exist
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?user_id=eq.{TEST_USER_ID}"
+    resp = requests.get(url, headers=get_headers())
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    existing = resp.json()
+    if existing:
+        # Update
+        patch_url = f"{SUPABASE_URL}/rest/v1/user_settings?user_id=eq.{TEST_USER_ID}"
+        patch_headers = get_headers(); patch_headers['Prefer'] = 'return=representation'
+        patch_resp = requests.patch(patch_url, headers=patch_headers, json={
+            'dark_mode': data.get('dark_mode', False),
+            'notifications': data.get('notifications', True),
+            'currency': data.get('currency', 'USD'),
+            'language': data.get('language', 'en'),
+            'timezone': data.get('timezone', 'America/New_York'),
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        if patch_resp.status_code not in [200, 204]:
+            raise HTTPException(status_code=patch_resp.status_code, detail=patch_resp.text)
+    else:
+        # Insert
+        post_url = f"{SUPABASE_URL}/rest/v1/user_settings"
+        post_headers = get_headers(); post_headers['Prefer'] = 'return=representation'
+        post_resp = requests.post(post_url, headers=post_headers, json={
+            'user_id': TEST_USER_ID,
+            'dark_mode': data.get('dark_mode', False),
+            'notifications': data.get('notifications', True),
+            'currency': data.get('currency', 'USD'),
+            'language': data.get('language', 'en'),
+            'timezone': data.get('timezone', 'America/New_York'),
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
+        })
+        if post_resp.status_code not in [200, 201]:
+            raise HTTPException(status_code=post_resp.status_code, detail=post_resp.text)
+    # Return latest
+    return get_settings()
 
 @app.on_event("startup")
 async def startup_event():
